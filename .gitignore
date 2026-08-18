@@ -1,0 +1,15 @@
+# OS metadata
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# User local storage & runtime cache
+user/
+*.log
+_scratch/
+中间文件归档/
+
+# Temporary files
+*.tmp
+*.bak
+*~
