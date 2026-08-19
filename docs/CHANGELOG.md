@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All installers copy the application into a stable per-user directory before creating Illustrator launcher proxies.
 - Update checks and standalone updates use the latest GitHub Release assets instead of mutable `master` files.
 
+### Fixed
+- Release scripts read UTF-8 version metadata correctly in Windows PowerShell 5.1.
+
 ---
 
 ## [1.2.0] - 2026-08-18

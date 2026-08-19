@@ -6,7 +6,7 @@ param(
 $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $versionData = Get-Content -LiteralPath (Join-Path $projectRoot "version.json") `
-    -Raw | ConvertFrom-Json
+    -Raw -Encoding UTF8 | ConvertFrom-Json
 $tag = "v$($versionData.version)"
 
 if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {

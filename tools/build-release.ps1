@@ -6,7 +6,8 @@ param(
 $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $versionFile = Join-Path $projectRoot "version.json"
-$versionData = Get-Content -LiteralPath $versionFile -Raw | ConvertFrom-Json
+$versionData = Get-Content -LiteralPath $versionFile -Raw -Encoding UTF8 |
+    ConvertFrom-Json
 
 if ($versionData.version -notmatch '^\d+\.\d+\.\d+$') {
     throw "version.json 中的版本号不是有效的语义版本: $($versionData.version)"
