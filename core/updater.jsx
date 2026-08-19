@@ -6,7 +6,7 @@
 var VTUpdater = $.global.VTUpdater = (function () {
     var updater = {};
 
-    updater.CURRENT_VERSION = "1.2.1";
+    updater.CURRENT_VERSION = "";
     updater.REPO_OWNER = "wynleywu";
     updater.REPO_NAME = "vector-toolbox";
     updater.RAW_VERSION_URL = "https://github.com/wynleywu/vector-toolbox/releases/latest/download/version.json";
@@ -14,8 +14,36 @@ var VTUpdater = $.global.VTUpdater = (function () {
 
     var rootDir = null;
 
+    function readLocalVersion(rootPath) {
+        var versionFile = new File(rootPath + "/version.json");
+        if (!versionFile.exists) {
+            throw new Error("缺少本地版本清单: " + versionFile.fsName);
+        }
+
+        var opened = false;
+        var content = "";
+        try {
+            versionFile.encoding = "UTF-8";
+            if (!versionFile.open("r")) {
+                throw new Error("无法读取本地版本清单: " + versionFile.fsName);
+            }
+            opened = true;
+            content = versionFile.read();
+        } finally {
+            if (opened) versionFile.close();
+        }
+
+        var data = VTUtils.parseJSON(content);
+        var version = data && data.version ? ("" + data.version) : "";
+        if (!/^\d+\.\d+\.\d+$/.test(version)) {
+            throw new Error("本地版本清单中的版本号无效: " + versionFile.fsName);
+        }
+        return version;
+    }
+
     updater.init = function (rootPath) {
         rootDir = rootPath;
+        updater.CURRENT_VERSION = readLocalVersion(rootDir);
     };
 
     // Semver comparison: returns true if v1 is newer than v2

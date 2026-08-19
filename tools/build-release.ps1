@@ -33,6 +33,12 @@ foreach ($relativePath in $requiredDirectories + $requiredFiles) {
     }
 }
 
+$updaterSource = Get-Content -LiteralPath (Join-Path $projectRoot "core/updater.jsx") `
+    -Raw -Encoding UTF8
+if ($updaterSource -match 'CURRENT_VERSION\s*=\s*"\d+\.\d+\.\d+"') {
+    throw "core/updater.jsx 不得硬编码 CURRENT_VERSION；请读取 version.json。"
+}
+
 $outputPath = if ([IO.Path]::IsPathRooted($OutputDirectory)) {
     [IO.Path]::GetFullPath($OutputDirectory)
 } else {

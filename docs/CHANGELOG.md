@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.1] - 2026-08-19
+
+### Fixed
+- Load the About dialog and update comparison version from the installed `version.json`.
+- Reject release builds that hardcode a semantic version in `VTUpdater.CURRENT_VERSION`.
+
+---
+
 ## [1.3.0] - 2026-08-19
 
 ### Added

@@ -4,7 +4,7 @@
  * An open-source, modular, and extensible ScriptUI palette for Adobe Illustrator.
  * GitHub: https://github.com/wynleywu/vector-toolbox
  *
- * @version 1.2.1
+ * @version See version.json
  * @license MIT
  */
 
