@@ -6,10 +6,10 @@
 var VTUpdater = $.global.VTUpdater = (function () {
     var updater = {};
 
-    updater.CURRENT_VERSION = "1.2.0";
+    updater.CURRENT_VERSION = "1.2.1";
     updater.REPO_OWNER = "wynleywu";
     updater.REPO_NAME = "vector-toolbox";
-    updater.RAW_VERSION_URL = "https://raw.githubusercontent.com/wynleywu/vector-toolbox/master/version.json";
+    updater.RAW_VERSION_URL = "https://github.com/wynleywu/vector-toolbox/releases/latest/download/version.json";
     updater.GITHUB_URL = "https://github.com/wynleywu/vector-toolbox";
 
     var rootDir = null;
@@ -52,9 +52,9 @@ var VTUpdater = $.global.VTUpdater = (function () {
         var cmd = "";
 
         if (isWindows) {
-            cmd = 'cmd.exe /c "curl -s -k -m 8 "' + updater.RAW_VERSION_URL + '" -o "' + tempPath + '" || powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (New-Object Net.WebClient).DownloadFile(\'' + updater.RAW_VERSION_URL + '\', \'' + tempPath + '\')""';
+            cmd = 'cmd.exe /c "curl -L -s -k -m 8 "' + updater.RAW_VERSION_URL + '" -o "' + tempPath + '" || powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (New-Object Net.WebClient).DownloadFile(\'' + updater.RAW_VERSION_URL + '\', \'' + tempPath + '\')""';
         } else {
-            cmd = '/bin/bash -c "curl -s -k -m 8 \'' + updater.RAW_VERSION_URL + '\' -o \'' + tempPath + '\'"';
+            cmd = '/bin/bash -c "curl -L -s -k -m 8 \'' + updater.RAW_VERSION_URL + '\' -o \'' + tempPath + '\'"';
         }
 
         try {
@@ -184,7 +184,7 @@ var VTUpdater = $.global.VTUpdater = (function () {
             if (isWindows) {
                 var updateBat = new File(rootDir + "/update-windows.bat");
                 if (updateBat.exists) {
-                    app.system('cmd.exe /c "' + updateBat.fsName + '"');
+                    app.system('cmd.exe /c ""' + updateBat.fsName + '" --no-pause"');
                     success = true;
                 }
             } else {

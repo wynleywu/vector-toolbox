@@ -26,23 +26,23 @@
 Vector Toolbox 深度适配 **Adobe Illustrator 2021、2022、2023、2024、2025、2026+ (v25.0 ~ v30.0+)**，支持 Windows 与 macOS 平台。
 
 ### 方式 A：Windows 一键安装 (推荐)
-1. 下载或克隆仓库至本地磁盘（如 `D:\vector-toolbox`）；
-2. 双击运行根目录下的 `install-windows.bat`；
-3. 程序将自动检测本地所有已安装的 Illustrator 版本并注入启动入口；
-4. 打开 Illustrator，点击菜单 **【文件 (File)】** -> **【脚本 (Scripts)】** -> **【Vector-Toolbox】** 即可启动。
+1. 从 GitHub Releases 下载资产 `Vector-Toolbox.zip` 并解压；
+2. 双击运行 `install-windows.bat` 并允许管理员权限；
+3. 安装器会把程序复制到 `%APPDATA%\VectorToolbox`，再检测本机 Illustrator 并创建启动入口；
+4. 安装后可删除下载与解压目录。重启 Illustrator，在 **【文件】** -> **【脚本】** -> **【Vector-Toolbox】** 中启动。
 
 ### 方式 B：macOS 一键安装 (推荐)
-1. 打开终端（Terminal），进入项目根目录：
+1. 从 GitHub Releases 下载资产 `Vector-Toolbox.zip` 并解压，然后在终端进入解压目录：
    ```bash
    cd /path/to/vector-toolbox
    bash install-macos.sh
    ```
-2. 重启 Illustrator，在 **【文件】** -> **【脚本】** -> **【Vector-Toolbox】** 中启动。
+2. 程序会安装到 `~/Library/Application Support/VectorToolbox`。安装后可删除解压目录；重启 Illustrator 后从脚本菜单启动。
 
 ### 方式 C：Illustrator 内置免安装直接运行
 1. 打开 Illustrator，按下快捷键 `Ctrl + F12` (Windows) 或 `Cmd + F12` (macOS)；
 2. 选择根目录下的 `Vector-Toolbox.jsx` 打开；
-3. 或运行 `Install-VectorToolbox.jsx` 交互式写入脚本菜单。
+3. 或运行 `Install-VectorToolbox.jsx`，将程序复制到稳定目录并交互式写入脚本菜单。
 
 ---
 

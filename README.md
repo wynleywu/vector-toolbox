@@ -66,11 +66,15 @@ Scripts for retired tools stay under `scripts/` and can be re-registered in `con
 
 ### Option 1: Automated One-Click Installers (Recommended)
 
-- **Windows**: Double-click `install-windows.bat` in the project root and approve the administrator prompt.
+- Download the `Vector-Toolbox.zip` asset from [Releases](https://github.com/wynleywu/vector-toolbox/releases) and extract it.
+- **Windows**: Double-click `install-windows.bat` and approve the administrator prompt.
 - **macOS**: Run `bash install-macos.sh` in Terminal.
 - **In-App JSX**: In Adobe Illustrator, press `Ctrl+F12` / `Cmd+F12` and run `Install-VectorToolbox.jsx`.
 
-The installer creates a launcher proxy in each detected Illustrator `Presets/<locale>/<localized scripts folder>` directory. Keep the project folder in place. Once installed, fully restart Illustrator and launch it via **File** > **Scripts** > **Vector-Toolbox**.
+The installer copies the complete application into a stable per-user directory before creating launcher proxies for detected Illustrator installations. You may delete the downloaded and extracted files after installation. Restart Illustrator, then launch **File** > **Scripts** > **Vector-Toolbox**.
+
+- **Windows install directory**: `%APPDATA%\VectorToolbox`
+- **macOS install directory**: `~/Library/Application Support/VectorToolbox`
 
 ### Option 2: Run Directly
 
@@ -87,6 +91,9 @@ vector-toolbox/
 ├── Install-VectorToolbox.jsx    # In-App one-click installer
 ├── install-windows.bat          # Windows one-click automated installer
 ├── install-macos.sh             # macOS one-click automated installer
+├── tools/
+│   ├── build-release.ps1        # Build the installable Release asset and checksum
+│   └── publish-release.ps1      # Verify the tag and publish a Release with assets
 ├── core/
 │   ├── utils.jsx                # Units conversion, DOM helpers, JSON serializer
 │   ├── storage.jsx              # Local user persistence (recents, favorites, config)
@@ -110,6 +117,10 @@ vector-toolbox/
 ├── LICENSE                      # MIT License
 └── README.md                    # Project documentation
 ```
+
+### Publishing an installable release
+
+Update `version.json` and the application version, then create and push a matching tag on the verified commit. Run `powershell -File tools/build-release.ps1` to generate `dist/Vector-Toolbox.zip`, the release version manifest, and a SHA-256 checksum. Run `powershell -File tools/publish-release.ps1` to validate the clean worktree and tag, then create a GitHub Release containing all assets.
 
 ---
 

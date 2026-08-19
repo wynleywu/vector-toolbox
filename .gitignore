@@ -8,6 +8,7 @@ user/
 *.log
 _scratch/
 中间文件归档/
+dist/
 
 # Temporary files
 *.tmp

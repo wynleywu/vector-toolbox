@@ -1,15 +1,14 @@
 {
   "name": "vector-toolbox",
-  "version": "1.2.0",
-  "releaseDate": "2026-08-18",
+  "version": "1.2.1",
+  "releaseDate": "2026-08-19",
   "minAiVersion": 25,
   "description": "Adobe Illustrator 模块化常驻脚本工具箱",
   "changelog": [
-    "默认 6 款核心工具：宽高标注、生成页码、转曲并备份、栅格参考线、统一尺寸、导出 PDF",
-    "导出 PDF 默认合并为多页，可选可编辑版/转曲版，文件名可选三种日期时间格式",
-    "修复 BridgeTalk 反斜杠损坏导致工具无法启动，以及导出 PDF 副本失败",
-    "面板分类芯片、最近使用标记与窗口缩放；跨平台安装与一键更新"
+    "安装器会将程序复制到稳定的用户目录，解压目录可在安装后删除",
+    "Release 提供可直接下载的 Vector-Toolbox.zip 安装包与 SHA-256 校验文件",
+    "自动更新改为下载最新 Release 资产，不再依赖 master 源码压缩包"
   ],
-  "downloadUrl": "https://github.com/wynleywu/vector-toolbox/archive/refs/heads/master.zip",
+  "downloadUrl": "https://github.com/wynleywu/vector-toolbox/releases/latest/download/Vector-Toolbox.zip",
   "releaseUrl": "https://github.com/wynleywu/vector-toolbox/releases"
 }
