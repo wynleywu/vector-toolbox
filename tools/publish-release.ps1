@@ -35,8 +35,14 @@ if ($LASTEXITCODE -ne 0) {
     throw "远端缺少标签 $tag。请先推送标签。"
 }
 
-gh release view $tag --repo $Repository *> $null
-if ($LASTEXITCODE -eq 0) {
+$releaseLookupLimit = 100
+$releaseList = gh release list --repo $Repository --limit $releaseLookupLimit `
+    --json tagName
+if ($LASTEXITCODE -ne 0) {
+    throw "Unable to query existing GitHub Releases."
+}
+$existingReleases = $releaseList | ConvertFrom-Json
+if ($existingReleases.tagName -contains $tag) {
     throw "Release $tag 已存在。为避免覆盖资产，脚本已停止。"
 }
 
