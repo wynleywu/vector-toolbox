@@ -79,12 +79,20 @@ try {
     )
     Copy-Item -LiteralPath $versionFile -Destination $releaseManifestPath -Force
 
+    $windowsInstaller = & (Join-Path $PSScriptRoot "build-windows-installer.ps1") `
+        -PayloadArchive $archivePath `
+        -Version $versionData.version `
+        -OutputDirectory $outputPath
+
     [pscustomobject]@{
         Version = $versionData.version
         Archive = $archive.FullName
         Manifest = $releaseManifestPath
         Size = $archive.Length
         SHA256 = $hash
+        WindowsInstaller = $windowsInstaller.Installer
+        WindowsInstallerSize = $windowsInstaller.Size
+        WindowsInstallerSHA256 = $windowsInstaller.SHA256
     }
 } finally {
     if (Test-Path -LiteralPath $temporaryRoot) {

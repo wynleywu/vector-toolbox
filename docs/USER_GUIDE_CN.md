@@ -26,10 +26,12 @@
 Vector Toolbox 深度适配 **Adobe Illustrator 2021、2022、2023、2024、2025、2026+ (v25.0 ~ v30.0+)**，支持 Windows 与 macOS 平台。
 
 ### 方式 A：Windows 一键安装 (推荐)
-1. 从 GitHub Releases 下载资产 `Vector-Toolbox.zip` 并解压；
-2. 双击运行 `install-windows.bat` 并允许管理员权限；
+1. 从 GitHub Releases 下载资产 `Vector-Toolbox-Setup.exe`；
+2. 双击安装程序并允许管理员权限，无需手动解压；
 3. 安装器会把程序复制到 `%APPDATA%\VectorToolbox`，再检测本机 Illustrator 并创建启动入口；
-4. 安装后可删除下载与解压目录。重启 Illustrator，在 **【文件】** -> **【脚本】** -> **【Vector-Toolbox】** 中启动。
+4. 安装完成后重启 Illustrator，在 **【文件】** -> **【脚本】** -> **【Vector-Toolbox】** 中启动。
+
+当前 EXE 尚未进行代码签名。如果 Microsoft Defender SmartScreen 弹出，请先确认文件来自本仓库的官方 Release，再点击 **更多信息** -> **仍要运行**。
 
 ### 方式 B：macOS 一键安装 (推荐)
 1. 从 GitHub Releases 下载资产 `Vector-Toolbox.zip` 并解压，然后在终端进入解压目录：
@@ -230,7 +232,7 @@ Vector Toolbox 深度适配 **Adobe Illustrator 2021、2022、2023、2024、2025
 ## 5. 常见问题排错 (FAQ)
 
 ### Q1: 运行安装脚本提示权限不足或未能找到目录？
-- **Windows**：请右键点击 `install-windows.bat` 选择 **“以管理员身份运行”**；如果安装在非标准路径，可在 Illustrator 中使用 `Ctrl+F12` 运行 `Install-VectorToolbox.jsx` 交互式选择路径。
+- **Windows**：优先运行 `Vector-Toolbox-Setup.exe` 并允许管理员权限。ZIP 备选方式需右键点击 `install-windows.bat` 选择 **“以管理员身份运行”**；如果安装在非标准路径，可在 Illustrator 中使用 `Ctrl+F12` 运行 `Install-VectorToolbox.jsx` 交互式选择路径。
 - **macOS**：在终端中使用 `sudo bash install-macos.sh` 运行。
 
 ### Q2: 点击工具后 Illustrator 没有反应？

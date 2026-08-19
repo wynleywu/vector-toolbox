@@ -11,6 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.2] - 2026-08-19
+
+### Added
+- Single-file `Vector-Toolbox-Setup.exe` installer for Windows releases.
+- SHA-256 checksum for the Windows installer executable.
+
+### Changed
+- Windows users can install directly from the EXE without extracting the ZIP.
+- Release builds and publishing now include both the EXE and cross-platform ZIP.
+
+---
+
 ## [1.2.1] - 2026-08-19
 
 ### Added

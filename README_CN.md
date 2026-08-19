@@ -71,12 +71,13 @@ Toolbox 继续常驻，即用即走
 
 ### 推荐方式：一键安装程序 (推荐)
 
-- 从 [Releases](https://github.com/wynleywu/vector-toolbox/releases) 下载资产 `Vector-Toolbox.zip` 并解压；
-- **Windows 用户**：双击 `install-windows.bat`，并允许管理员权限；
-- **macOS 用户**：打开终端运行 `bash install-macos.sh`；
+- **Windows 用户**：从 [Releases](https://github.com/wynleywu/vector-toolbox/releases) 下载 `Vector-Toolbox-Setup.exe`，双击并允许管理员权限，无需解压；
+- **macOS 用户**：下载并解压 `Vector-Toolbox.zip`，打开终端运行 `bash install-macos.sh`；
 - **AI 内部运行**：打开 Illustrator，使用 `Ctrl+F12` / `Cmd+F12` 运行 `Install-VectorToolbox.jsx`。
 
 安装程序会先把完整程序复制到稳定的用户目录，再为已安装的 Illustrator 创建启动代理。安装完成后可以删除下载和解压目录。完全退出并重启 Illustrator，即可在 **文件 (File)** -> **脚本 (Scripts)** -> **Vector-Toolbox** 中启动。
+
+Windows EXE 当前尚未进行代码签名。如果 Microsoft Defender SmartScreen 弹出，请先确认文件来自本仓库的官方 Release，再点击 **更多信息** -> **仍要运行**。
 
 - **Windows 安装目录**：`%APPDATA%\VectorToolbox`
 - **macOS 安装目录**：`~/Library/Application Support/VectorToolbox`
@@ -99,7 +100,8 @@ vector-toolbox/
 ├── install-windows.bat          # Windows 一键自动安装脚本
 ├── install-macos.sh             # macOS 一键自动安装脚本
 ├── tools/
-│   ├── build-release.ps1        # 生成可安装 Release 资产与校验文件
+│   ├── build-windows-installer.ps1 # 生成 Windows 单文件安装程序
+│   ├── build-release.ps1        # 生成 Release 资产与校验文件
 │   └── publish-release.ps1      # 校验标签并发布带安装资产的 Release
 ├── core/                        # 核心通用框架
 │   ├── utils.jsx                # ES3 polyfill、单位换算、DOM 助手、JSON 编解码
@@ -127,7 +129,7 @@ vector-toolbox/
 
 ### 发布可安装版本
 
-维护者先更新 `version.json` 与应用版本，再在已验证提交上创建同版本标签。运行 `powershell -File tools/build-release.ps1` 可在 `dist/` 生成 `Vector-Toolbox.zip`、版本清单和 SHA-256 校验文件；运行 `powershell -File tools/publish-release.ps1` 会校验工作区、标签和远端标签，并创建包含这些资产的 GitHub Release。
+维护者先更新 `version.json` 与应用版本，再在已验证提交上创建同版本标签。运行 `powershell -File tools/build-release.ps1` 可在 `dist/` 生成 Windows EXE、跨平台 ZIP、版本清单和 SHA-256 校验文件；运行 `powershell -File tools/publish-release.ps1` 会校验工作区、标签和远端标签，并创建包含这些资产的 GitHub Release。
 
 ---
 

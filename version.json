@@ -1,13 +1,13 @@
 {
   "name": "vector-toolbox",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "releaseDate": "2026-08-19",
   "minAiVersion": 25,
   "description": "Adobe Illustrator 模块化常驻脚本工具箱",
   "changelog": [
-    "安装器会将程序复制到稳定的用户目录，解压目录可在安装后删除",
-    "Release 提供可直接下载的 Vector-Toolbox.zip 安装包与 SHA-256 校验文件",
-    "自动更新改为下载最新 Release 资产，不再依赖 master 源码压缩包"
+    "Windows 新增双击即可运行的 Vector-Toolbox-Setup.exe 单文件安装器",
+    "安装器会自动解压并请求管理员权限，无需手动处理 ZIP 或批处理",
+    "Release 同时保留 ZIP 作为 macOS、自动更新与手动安装载荷"
   ],
   "downloadUrl": "https://github.com/wynleywu/vector-toolbox/releases/latest/download/Vector-Toolbox.zip",
   "releaseUrl": "https://github.com/wynleywu/vector-toolbox/releases"

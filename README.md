@@ -66,12 +66,13 @@ Scripts for retired tools stay under `scripts/` and can be re-registered in `con
 
 ### Option 1: Automated One-Click Installers (Recommended)
 
-- Download the `Vector-Toolbox.zip` asset from [Releases](https://github.com/wynleywu/vector-toolbox/releases) and extract it.
-- **Windows**: Double-click `install-windows.bat` and approve the administrator prompt.
-- **macOS**: Run `bash install-macos.sh` in Terminal.
+- **Windows**: Download `Vector-Toolbox-Setup.exe` from [Releases](https://github.com/wynleywu/vector-toolbox/releases), double-click it, and approve the administrator prompt. No extraction is required.
+- **macOS**: Download `Vector-Toolbox.zip`, extract it, and run `bash install-macos.sh` in Terminal.
 - **In-App JSX**: In Adobe Illustrator, press `Ctrl+F12` / `Cmd+F12` and run `Install-VectorToolbox.jsx`.
 
 The installer copies the complete application into a stable per-user directory before creating launcher proxies for detected Illustrator installations. You may delete the downloaded and extracted files after installation. Restart Illustrator, then launch **File** > **Scripts** > **Vector-Toolbox**.
+
+The Windows EXE is currently unsigned. If Microsoft Defender SmartScreen appears, verify that the file came from this repository's official Release, then choose **More info** > **Run anyway**.
 
 - **Windows install directory**: `%APPDATA%\VectorToolbox`
 - **macOS install directory**: `~/Library/Application Support/VectorToolbox`
@@ -92,7 +93,8 @@ vector-toolbox/
 ├── install-windows.bat          # Windows one-click automated installer
 ├── install-macos.sh             # macOS one-click automated installer
 ├── tools/
-│   ├── build-release.ps1        # Build the installable Release asset and checksum
+│   ├── build-windows-installer.ps1 # Build the Windows self-extracting EXE
+│   ├── build-release.ps1        # Build the Release assets and checksums
 │   └── publish-release.ps1      # Verify the tag and publish a Release with assets
 ├── core/
 │   ├── utils.jsx                # Units conversion, DOM helpers, JSON serializer
@@ -120,7 +122,7 @@ vector-toolbox/
 
 ### Publishing an installable release
 
-Update `version.json` and the application version, then create and push a matching tag on the verified commit. Run `powershell -File tools/build-release.ps1` to generate `dist/Vector-Toolbox.zip`, the release version manifest, and a SHA-256 checksum. Run `powershell -File tools/publish-release.ps1` to validate the clean worktree and tag, then create a GitHub Release containing all assets.
+Update `version.json` and the application version, then create and push a matching tag on the verified commit. Run `powershell -File tools/build-release.ps1` to generate the Windows EXE, cross-platform ZIP, version manifest, and SHA-256 checksums in `dist/`. Run `powershell -File tools/publish-release.ps1` to validate the clean worktree and tag, then create a GitHub Release containing all assets.
 
 ---
 

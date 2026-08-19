@@ -48,8 +48,14 @@ if ($existingReleases.tagName -contains $tag) {
 
 $package = & (Join-Path $PSScriptRoot "build-release.ps1")
 $checksum = "$($package.Archive).sha256"
+$installerChecksum = "$($package.WindowsInstaller).sha256"
 
-gh release create $tag $package.Archive $checksum $package.Manifest `
+gh release create $tag `
+    $package.WindowsInstaller `
+    $installerChecksum `
+    $package.Archive `
+    $checksum `
+    $package.Manifest `
     --repo $Repository `
     --verify-tag `
     --title "Vector Toolbox $tag" `
