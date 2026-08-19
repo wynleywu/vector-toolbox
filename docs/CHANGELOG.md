@@ -11,6 +11,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.0] - 2026-08-19
+
+### Added
+- On-demand PDF size estimates based on up to three representative artboards.
+- Actual total PDF size in the export completion status.
+
+### Changed
+- Export PDF quality choices now come from the active Illustrator PDF preset list.
+
+### Fixed
+- Apply the selected PDF preset consistently to Export for Screens and `PDFSaveOptions` paths.
+
+---
+
 ## [1.2.2] - 2026-08-19
 
 ### Added

@@ -26,6 +26,7 @@
 
     var docBaseName = doc.name.replace(/\.[^\.]+$/, "");
     var BACKUP_NAME = "__原文字备份__";
+    var ESTIMATE_SAMPLE_LIMIT = 3;
 
     function pad2(n) {
         return n < 10 ? ("0" + n) : ("" + n);
@@ -117,21 +118,84 @@
         return parts.join(",");
     }
 
-    function pickPreset(screen) {
-        var preferred = screen
-            ? ["[Smallest File Size]", "[最小文件大小]", "[Illustrator Default]", "[Illustrator 默认]"]
-            : ["[High Quality Print]", "[高质量打印]", "[Press Quality]", "[印刷质量]", "[Illustrator Default]"];
+    function listPdfPresets() {
+        var result = [];
         try {
             var list = app.PDFPresetsList;
-            var j, i;
-            for (j = 0; j < preferred.length; j++) {
-                for (i = 0; i < list.length; i++) {
-                    if (list[i] === preferred[j]) return list[i];
-                }
+            var i;
+            for (i = 0; i < list.length; i++) {
+                var name = "" + list[i];
+                if (name && !contains(result, name)) result.push(name);
             }
-            if (list && list.length > 0) return list[0];
         } catch (e) {}
-        return screen ? "[Smallest File Size]" : "[High Quality Print]";
+        return result;
+    }
+
+    function preferredPresetIndex(presets) {
+        var preferred = [
+            "[High Quality Print]", "[高质量打印]",
+            "[Press Quality]", "[印刷质量]",
+            "[Illustrator Default]", "[Illustrator 默认]"
+        ];
+        var p, i;
+        for (p = 0; p < preferred.length; p++) {
+            for (i = 0; i < presets.length; i++) {
+                if (presets[i] === preferred[p]) return i;
+            }
+        }
+        return 0;
+    }
+
+    function sampleIndices(indices, limit) {
+        var result = [];
+        if (!indices || indices.length === 0 || limit <= 0) return result;
+        if (indices.length <= limit) return indices.slice(0);
+        if (limit === 1) return [indices[0]];
+        var i;
+        for (i = 0; i < limit; i++) {
+            var position = Math.round(i * (indices.length - 1) / (limit - 1));
+            var value = indices[position];
+            if (!contains(result, value)) result.push(value);
+        }
+        return result;
+    }
+
+    function formatBytes(bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+        if (bytes < 1024 * 1024 * 1024) {
+            return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+        }
+        return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+    }
+
+    function estimateRange(files, totalCount) {
+        if (!files || files.length === 0) {
+            throw new Error("抽样导出未生成 PDF 文件");
+        }
+        var min = null;
+        var max = 0;
+        var sum = 0;
+        var i;
+        for (i = 0; i < files.length; i++) {
+            var size = files[i].length || 0;
+            if (min === null || size < min) min = size;
+            if (size > max) max = size;
+            sum += size;
+        }
+        if (totalCount <= files.length) {
+            return { low: sum, high: sum, sampled: files.length };
+        }
+        return {
+            low: min * totalCount,
+            high: max * totalCount,
+            sampled: files.length
+        };
+    }
+
+    function formatEstimateRange(range) {
+        if (range.low === range.high) return "约 " + formatBytes(range.low);
+        return "约 " + formatBytes(range.low) + " - " + formatBytes(range.high);
     }
 
     function listPdfs(folder) {
@@ -255,8 +319,9 @@
         workDoc.exportForScreens(folder, ExportForScreensType.SE_PDF, options, item);
     }
 
-    function exportMergedBySaveAs(workDoc, destFile, indices) {
+    function exportMergedBySaveAs(workDoc, destFile, indices, preset) {
         var opts = new PDFSaveOptions();
+        opts.pDFPreset = preset;
         opts.viewAfterSaving = false;
         opts.saveMultipleArtboards = true;
         if (indices && indices.length > 0 && indices.length < workDoc.artboards.length) {
@@ -273,12 +338,18 @@
         if (doc.path && doc.path.exists) defaultFolder = doc.path;
     } catch (pathErr) {}
 
+    var pdfPresets = listPdfPresets();
+    if (pdfPresets.length === 0) {
+        alert("未读取到 Illustrator PDF 预设，无法导出。", "导出 PDF");
+        return;
+    }
+
     var dlg = new Window("dialog", "导出 PDF - Vector Toolbox");
     dlg.orientation = "column";
     dlg.alignChildren = ["fill", "top"];
     dlg.spacing = 10;
     dlg.margins = 15;
-    dlg.preferredSize.width = 420;
+    dlg.preferredSize.width = 460;
 
     var pnlScope = dlg.add("panel", undefined, "范围");
     pnlScope.orientation = "column";
@@ -307,14 +378,25 @@
     rbMerge.value = true;
 
     var rowQuality = pnlOut.add("group");
-    rowQuality.add("statictext", undefined, "质量:");
-    var ddlQuality = rowQuality.add("dropdownlist", undefined, ["印刷", "屏幕"]);
-    ddlQuality.selection = 0;
+    rowQuality.alignment = ["fill", "center"];
+    rowQuality.add("statictext", undefined, "PDF 预设:");
+    var ddlQuality = rowQuality.add("dropdownlist", undefined, pdfPresets);
+    ddlQuality.selection = preferredPresetIndex(pdfPresets);
+    ddlQuality.alignment = ["fill", "center"];
+    ddlQuality.helpTip = "来自 Illustrator 的 PDF 预设，所有导出路径使用同一预设";
 
     var chkLive = pnlOut.add("checkbox", undefined, "可编辑版（保持文字可改）");
     chkLive.value = true;
     var chkOutline = pnlOut.add("checkbox", undefined, "转曲版（文字转轮廓，不影响原稿）");
     chkOutline.value = false;
+
+    var rowEstimate = pnlOut.add("group");
+    rowEstimate.alignment = ["fill", "top"];
+    var btnEstimate = rowEstimate.add("button", undefined, "估算大小");
+    var lblEstimate = rowEstimate.add("statictext", undefined, "尚未估算", { multiline: true });
+    lblEstimate.alignment = ["fill", "top"];
+    lblEstimate.preferredSize.height = 64;
+    lblEstimate.helpTip = "最多抽样 3 个画板，结果为近似区间";
 
     var pnlSave = dlg.add("panel", undefined, "保存");
     pnlSave.orientation = "column";
@@ -378,7 +460,87 @@
         return withStamp(edtName.text, selectedStamp());
     }
 
+    function selectedPresetName() {
+        return ddlQuality.selection ? ddlQuality.selection.text : "";
+    }
+
+    function estimateFingerprint() {
+        return [
+            currentIndices().join(","),
+            rbMerge.value ? "merge" : "split",
+            selectedPresetName(),
+            chkLive.value ? "live" : "",
+            chkOutline.value ? "outline" : ""
+        ].join("|");
+    }
+
+    function withEstimateFolder(callback) {
+        var suffix = (new Date()).getTime() + "_" + Math.floor(Math.random() * 1000000);
+        var temp = new Folder(Folder.temp.fsName + "/__vt_pdf_estimate_" + suffix);
+        if (!temp.create()) {
+            throw new Error("无法创建估算临时目录: " + temp.fsName);
+        }
+        try {
+            return callback(temp);
+        } finally {
+            clearFolder(temp);
+            try { temp.remove(); } catch (e) {}
+        }
+    }
+
+    function estimateVariant(outlined, indices, totalCount, preset) {
+        var clone = null;
+        try {
+            var workDoc = doc;
+            if (outlined) {
+                clone = makeClone();
+                workDoc = clone.doc;
+                outlineVisibleText(workDoc);
+            }
+            return withEstimateFolder(function (temp) {
+                exportScreens(workDoc, temp, indices, preset, false);
+                return estimateRange(listPdfs(temp), totalCount);
+            });
+        } finally {
+            closeClone(clone);
+        }
+    }
+
+    var lastEstimateFingerprint = "";
+
+    function invalidateEstimate() {
+        lastEstimateFingerprint = "";
+        lblEstimate.text = "尚未估算";
+    }
+
+    function estimateResultText(liveRange, outlineRange, totalCount, sampleCount) {
+        var lines = [];
+        var totalLow = 0;
+        var totalHigh = 0;
+        if (liveRange) {
+            lines.push("可编辑版: " + formatEstimateRange(liveRange));
+            totalLow += liveRange.low;
+            totalHigh += liveRange.high;
+        }
+        if (outlineRange) {
+            lines.push("转曲版: " + formatEstimateRange(outlineRange));
+            totalLow += outlineRange.low;
+            totalHigh += outlineRange.high;
+        }
+        if (liveRange && outlineRange) {
+            lines.push("合计: " + formatEstimateRange({ low: totalLow, high: totalHigh }));
+        }
+        lines.push("抽样 " + sampleCount + "/" + totalCount + " 个画板，实际大小可能有偏差");
+        return lines.join("\n");
+    }
+
     function updatePreview() {
+        if (
+            lastEstimateFingerprint &&
+            lastEstimateFingerprint !== estimateFingerprint()
+        ) {
+            invalidateEstimate();
+        }
         ddlDateFmt.enabled = chkDate.value;
         var stem = currentStem();
         var names = [];
@@ -400,18 +562,74 @@
         lblPreview.text = text;
     }
 
-    rbAll.onClick = updatePreview;
-    rbActive.onClick = updatePreview;
-    rbCustom.onClick = updatePreview;
-    rbMerge.onClick = updatePreview;
-    rbSplit.onClick = updatePreview;
-    chkLive.onClick = updatePreview;
-    chkOutline.onClick = updatePreview;
+    function onExportOptionChange() {
+        updatePreview();
+    }
+
+    rbAll.onClick = onExportOptionChange;
+    rbActive.onClick = onExportOptionChange;
+    rbCustom.onClick = onExportOptionChange;
+    rbMerge.onClick = onExportOptionChange;
+    rbSplit.onClick = onExportOptionChange;
+    chkLive.onClick = onExportOptionChange;
+    chkOutline.onClick = onExportOptionChange;
+    ddlQuality.onChange = onExportOptionChange;
     chkDate.onClick = updatePreview;
     ddlDateFmt.onChange = updatePreview;
     edtName.onChanging = updatePreview;
-    edtRange.onChanging = updatePreview;
+    edtRange.onChanging = onExportOptionChange;
     updatePreview();
+
+    btnEstimate.onClick = function () {
+        if (!chkLive.value && !chkOutline.value) {
+            alert("请至少勾选「可编辑版」或「转曲版」。", "估算 PDF 大小");
+            return;
+        }
+        var indices = currentIndices();
+        if (indices.length === 0) {
+            alert("未选择任何有效的画板！", "估算 PDF 大小");
+            return;
+        }
+        var preset = selectedPresetName();
+        if (!preset) {
+            alert("请选择有效的 PDF 预设。", "估算 PDF 大小");
+            return;
+        }
+        if (chkOutline.value) {
+            var saved = false;
+            try { saved = !!doc.saved; } catch (savedErr) {}
+            if (!saved) {
+                alert("转曲版估算需要文档已保存且没有未保存改动。请先保存后重试。", "估算 PDF 大小");
+                return;
+            }
+        }
+
+        var samples = sampleIndices(indices, ESTIMATE_SAMPLE_LIMIT);
+        btnEstimate.enabled = false;
+        lblEstimate.text = "估算中，请稍候...";
+        try { dlg.update(); } catch (updateErr) {}
+        try {
+            var liveRange = chkLive.value
+                ? estimateVariant(false, samples, indices.length, preset)
+                : null;
+            var outlineRange = chkOutline.value
+                ? estimateVariant(true, samples, indices.length, preset)
+                : null;
+            lastEstimateFingerprint = estimateFingerprint();
+            lblEstimate.text = estimateResultText(
+                liveRange,
+                outlineRange,
+                indices.length,
+                samples.length
+            );
+        } catch (estimateErr) {
+            lastEstimateFingerprint = "";
+            lblEstimate.text = "估算失败: " + (estimateErr.message || estimateErr.toString());
+        } finally {
+            btnEstimate.enabled = true;
+            try { dlg.update(); } catch (finalUpdateErr) {}
+        }
+    };
 
     btnBrowse.onClick = function () {
         var sel = Folder.selectDialog("请选择 PDF 保存目录", new Folder(edtDest.text));
@@ -449,10 +667,13 @@
     var dateStr = selectedStamp();
     var stem = withStamp(edtName.text, dateStr);
     var mergeOne = rbMerge.value;
-    var screenQuality = ddlQuality.selection && ddlQuality.selection.index === 1;
-    var preset = pickPreset(screenQuality);
+    var preset = selectedPresetName();
+    if (!preset) {
+        alert("请选择有效的 PDF 预设。", "导出 PDF");
+        return;
+    }
     var lastError = "";
-    var exported = 0;
+    var exportedFiles = [];
 
     function withTempFolder(callback) {
         var temp = new Folder(destDir.fsName + "/__vt_pdf_tmp");
@@ -503,7 +724,7 @@
                 var src = takePdfForArtboard(pdfs, used, abName);
                 if (!src) continue;
                 var dest = new File(destDir.fsName + "/" + nameStem + "_" + pad2(idx + 1) + "_" + sanitizeName(abName) + ".pdf");
-                if (moveFile(src, dest)) exported++;
+                if (moveFile(src, dest)) exportedFiles.push(dest);
             }
         });
     }
@@ -518,7 +739,7 @@
                 throw new Error("导出屏幕未生成 PDF 文件");
             }
             var dest = new File(destDir.fsName + "/" + nameStem + ".pdf");
-            if (moveFile(pdfs[0], dest)) exported++;
+            if (moveFile(pdfs[0], dest)) exportedFiles.push(dest);
         });
     }
 
@@ -542,8 +763,8 @@
                 exportSplit(workDoc, nameStem);
             } else if (clone) {
                 var dest = new File(destDir.fsName + "/" + nameStem + ".pdf");
-                exportMergedBySaveAs(workDoc, dest, targetIndices);
-                exported++;
+                exportMergedBySaveAs(workDoc, dest, targetIndices, preset);
+                if (dest.exists) exportedFiles.push(dest);
             } else {
                 exportMergedWholeDoc(workDoc, nameStem);
             }
@@ -567,12 +788,16 @@
         try { destDir.execute(); } catch (openErr) {}
     }
 
-    if (exported === 0) {
+    if (exportedFiles.length === 0) {
         var errText = lastError ? ("PDF 失败: " + lastError) : "PDF 导出失败";
         alert(errText, "导出 PDF");
         return errText;
     }
-    return dateStr
-        ? ("✓ 已导出 " + exported + " 个 PDF（" + dateStr + "）")
-        : ("✓ 已导出 " + exported + " 个 PDF");
+    var totalBytes = 0;
+    var exportedIndex;
+    for (exportedIndex = 0; exportedIndex < exportedFiles.length; exportedIndex++) {
+        totalBytes += exportedFiles[exportedIndex].length || 0;
+    }
+    var resultText = "✓ 已导出 " + exportedFiles.length + " 个 PDF，共 " + formatBytes(totalBytes);
+    return dateStr ? (resultText + "（" + dateStr + "）") : resultText;
 })();

@@ -63,7 +63,7 @@ Toolbox 继续常驻，即用即走
 | **文本** | **转曲并备份** | `scripts/text/outline-and-backup.jsx` | `dialog` | 可选选区或全文转曲，备份到隐藏图层且不重复备份 |
 | **参考线** | **栅格参考线** | `scripts/guide/grid-guides.jsx` | `palette` | 按 GuideGuide 方式生成行列栅格、四边、中线，支持画板或选区 |
 | **对象** | **统一尺寸** | `scripts/object/normalize-size.jsx` | `dialog` | 按宽度、高度或最大边等比/自由缩放批量统一选区对象尺寸 |
-| **导出** | **导出 PDF** | `scripts/export/export-pdf.jsx` | `dialog` | 默认合并为一个多页 PDF，文件名可选附加多种日期时间格式 |
+| **导出** | **导出 PDF** | `scripts/export/export-pdf.jsx` | `dialog` | 使用 Illustrator PDF 预设，支持抽样估算大小、多页/拆分及可编辑/转曲版 |
 
 ---
 

@@ -1,21 +1,20 @@
-Summary: 为 Windows 增加可双击运行的 `Vector-Toolbox-Setup.exe`。安装器静默解压后复用现有 `install-windows.bat`，用户只需确认一次管理员权限。
+Summary: 扩展 PDF 导出的质量选择，并在导出前提供按需、可解释的文件大小估算。质量统一由 Illustrator PDF 预设驱动，估算使用少量代表画板临时导出，不修改原稿。
 
-Context: 当前 Release 只提供 ZIP，用户必须解压并手动运行批处理。IExpress 实际构建连续失败两次，已停止该路径。Windows 11 环境已确认存在 .NET Framework 4.8 C# 编译器，仓库没有 Inno Setup、NSIS 或代码签名工具。现有批处理已负责自提升、复制到 `%APPDATA%\VectorToolbox`、扫描 Illustrator 和写入启动代理。
+Context: `scripts/export/export-pdf.jsx` 当前只显示“印刷 / 屏幕”，再通过本地化名称猜测预设。`ExportForScreensPDFOptions.pdfPreset` 会应用质量，但部分画板合并或转曲版走 `PDFSaveOptions`，没有设置 `pDFPreset`，因此现有质量选择在部分路径失效。Illustrator 脚本 API 不提供导出前的 PDF 字节数；大小只能通过真实临时导出估算。项目没有自动化测试框架。
 
-System Impact: `Vector-Toolbox.zip` 继续作为发布内容的唯一来源；EXE 只是该 ZIP 的自解压启动壳。安装目录、更新地址和 Illustrator 菜单代理逻辑不新增第二份状态。发布生命周期增加 EXE 构建、校验和上传步骤。
+System Impact: `app.PDFPresetsList` 成为质量选项的唯一来源，同一个预设名传入两条导出路径。大小估算是对话框内的临时状态，绑定范围、输出模式、预设和版本勾选；任一输入变化都会使旧结果失效。估算失败不阻止正式导出，临时 PDF 和文档副本必须始终清理。
 
-Approach: 使用 Windows 自带的 .NET Framework 4.8 C# 编译器生成单文件 WinForms EXE，将 `Vector-Toolbox.zip` 作为程序集资源嵌入。EXE 通过管理员清单请求权限，解压 ZIP 后隐藏调用已有安装器，并显示成功或失败对话框。首版不引入第三方构建依赖，也不包含代码签名；SmartScreen 可能显示“未知发布者”。
+Approach: 将质量控件改为“PDF 预设”下拉框，显示 Illustrator 当前可用的全部预设，默认优先“高质量打印”。新增“估算大小”按钮，最多均匀抽取首、中、末 3 个已选画板，以当前预设分别测量可编辑版和转曲版，再用样本最小值、最大值推算所选画板的总大小区间。结果明确标注抽样数量和“约”；正式导出后回报实际总大小。转曲估算若文档尚未保存则提示先保存，不为估算静默保存原稿。
 
 Changes:
-- `tools/build-windows-installer.ps1` - 生成 C# 启动器与管理员清单，嵌入 ZIP 并编译、校验 `Vector-Toolbox-Setup.exe`。
-- `tools/build-release.ps1` - 在 ZIP 成功后构建 EXE，并生成两个资产各自的 SHA-256。
-- `tools/publish-release.ps1` - 将 EXE 与校验文件加入 GitHub Release 资产。
-- `version.json`、`docs/CHANGELOG.md` - 升级到 `1.2.2` 并记录 Windows 单文件安装器。
-- `README.md`、`README_CN.md`、`docs/USER_GUIDE_CN.md` - Windows 首选 EXE，ZIP 保留为跨平台与手动安装备选。
+- `scripts/export/export-pdf.jsx` - 动态读取预设；统一 `ExportForScreensPDFOptions.pdfPreset` 与 `PDFSaveOptions.pDFPreset`；增加估算状态、样本选择、临时导出、区间格式化、失效处理和实际大小回报；调整输出区布局。
+- `config/tools.jsx` - 更新“导出 PDF”说明和工具版本，反映预设与大小估算能力。
+- `README.md`、`README_CN.md`、`docs/USER_GUIDE_CN.md` - 说明 PDF 预设、抽样估算的含义与限制。
+- `docs/CHANGELOG.md` - 在 `Unreleased` 记录质量一致性修复和大小估算功能。
 
 Verification:
-- 在 Windows PowerShell 5.1 执行发布构建，检查 EXE、ZIP、版本清单和 SHA-256。
-- 检查 EXE 为有效 .NET PE 文件，并从程序集资源回读完整 ZIP 载荷。
-- 用临时 Illustrator 目录运行安装链，验证固定安装目录、代理内容、退出码和清理行为。
-- 手动双击 EXE，确认只需接受 UAC，重启 Illustrator 后菜单入口可用。
-- 执行 `git diff --check` 和发布脚本的空 Release 检查。
+- 对脚本执行静态语法检查与 `git diff --check`。
+- 在 Illustrator 中确认下拉框与 `app.PDFPresetsList` 一致，预设不可用时有明确错误。
+- 分别验证全部 / 当前 / 指定范围、合并 / 拆分、可编辑 / 转曲组合，两条导出路径使用同一预设。
+- 用 1、3、76 个画板验证估算区间、选项变化失效、临时目录清理和未保存文档保护。
+- 对“最小文件大小 / 高质量打印 / 印刷质量”各导出一组，比较估算与实际总大小，并确认原稿内容、路径和保存状态不被估算改变。

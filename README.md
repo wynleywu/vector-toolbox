@@ -58,7 +58,7 @@ Scripts for retired tools stay under `scripts/` and can be re-registered in `con
 | **Typography** | **Outline & Backup** | `scripts/text/outline-and-backup.jsx` | `dialog` | Outline selected or all visible text, with a hidden backup layer |
 | **Guides** | **Grid Guides** | `scripts/guide/grid-guides.jsx` | `palette` | GuideGuide-style columns/rows, independent margins, outline, midlines, and clear |
 | **Object** | **Normalize Size** | `scripts/object/normalize-size.jsx` | `dialog` | Resize selected objects to uniform width, height, or bounding box |
-| **Export** | **Export PDF** | `scripts/export/export-pdf.jsx` | `dialog` | Defaults to one multi-page PDF; optional date/time suffix with several formats |
+| **Export** | **Export PDF** | `scripts/export/export-pdf.jsx` | `dialog` | Illustrator PDF presets, sampled size estimates, multi-page/split output, and live/outlined variants |
 
 ---
 

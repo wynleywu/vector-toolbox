@@ -66,8 +66,8 @@ var TOOLBOX_CONFIG = $.global.TOOLBOX_CONFIG = [
         script: "scripts/export/export-pdf.jsx",
         mode: "dialog",
         keywords: ["导出", "PDF", "发印", "画板", "pdf", "export", "print"],
-        description: "默认导出多页 PDF，文件名可选附加多种日期时间格式，不改动原稿",
+        description: "按 Illustrator PDF 预设导出，支持抽样估算大小、多页合并与转曲版",
         author: "Vector Toolbox Team",
-        version: "1.4.0"
+        version: "1.5.0"
     }
 ];
