@@ -11,6 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.1] - 2026-08-19
+
+### Added
+- Deterministic `Vector-Toolbox.zip` Release packaging with a version manifest and SHA-256 checksum.
+- Guarded publishing script that requires a clean worktree and matching pushed tag.
+
+### Changed
+- All installers copy the application into a stable per-user directory before creating Illustrator launcher proxies.
+- Update checks and standalone updates use the latest GitHub Release assets instead of mutable `master` files.
+
+---
+
 ## [1.2.0] - 2026-08-18
 
 Complete release of the resident 6-tool toolbox.

@@ -101,12 +101,12 @@ Vector Toolbox is tested and optimized for Adobe Illustrator version 25.0 (2021)
                └────────────┬────────────┘
                             │
                       VTUpdater.jsx
-           (Fetch raw master/version.json)
+          (Fetch latest Release version.json)
                             │
              ┌──────────────┴──────────────┐
              ▼                             ▼
-       Git-managed                   Standalone Zip
-      (git pull origin master)      (Download & extract zip)
+       Git-managed                   Installed Release
+      (git pull origin master)      (Download release asset)
              │                             │
              └──────────────┬──────────────┘
                             │
@@ -116,7 +116,5 @@ Vector Toolbox is tested and optimized for Adobe Illustrator version 25.0 (2021)
 1. **Decoupled Version Metadata**: `version.json` defines current version, minimum AI requirement, download endpoints, and bulleted changelog.
 2. **Hybrid Updater Engine**:
    - **Git Mode**: When installed inside a cloned Git repository, automatically invokes `git pull origin master` for lightning-fast incremental updates.
-   - **Standalone Archive Mode**: When unzipped without git, downloads the latest master zip via `update-windows.bat` / `update-macos.sh` and syncs files safely.
+   - **Installed Release Mode**: Downloads the immutable `Vector-Toolbox.zip` asset from the latest GitHub Release via `update-windows.bat` / `update-macos.sh` and syncs files into the stable user installation directory.
 3. **Zero-Restart Reloading**: After files are updated, clicking **↻ 刷新** evaluates new manifests and scripts instantly.
-
-
