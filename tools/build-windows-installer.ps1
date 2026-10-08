@@ -56,7 +56,9 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Windows.Forms;
 
 [assembly: AssemblyTitle("Vector Toolbox Setup")]
@@ -70,6 +72,9 @@ namespace VectorToolbox.Installer
     internal static class Program
     {
         private const string PayloadResourceName = "VectorToolbox.Payload.zip";
+        private const string InstallLogFileName = "VectorToolboxSetup.log";
+        private const string FailureMarker = "[!]";
+        private const int FallbackTailLineCount = 5;
 
         [STAThread]
         private static int Main()
@@ -117,11 +122,15 @@ namespace VectorToolbox.Installer
 
                 ProcessStartInfo startInfo = new ProcessStartInfo();
                 startInfo.FileName = "cmd.exe";
+                // 2>&1 合并 stderr，避免分别读取两个管道时死锁。
                 startInfo.Arguments = "/d /s /c \"\"" + installerPath +
-                    "\" --elevated --no-pause\"";
+                    "\" --elevated --no-pause 2>&1\"";
                 startInfo.WorkingDirectory = Path.GetDirectoryName(installerPath);
                 startInfo.UseShellExecute = false;
                 startInfo.CreateNoWindow = true;
+                startInfo.RedirectStandardOutput = true;
+                // install-windows.bat 以 chcp 65001 输出 UTF-8。
+                startInfo.StandardOutputEncoding = new UTF8Encoding(false);
 
                 using (Process installer = Process.Start(startInfo))
                 {
@@ -129,12 +138,30 @@ namespace VectorToolbox.Installer
                     {
                         throw new InvalidOperationException("无法启动 Windows 安装脚本。");
                     }
+                    string output = installer.StandardOutput.ReadToEnd();
                     installer.WaitForExit();
+                    string logPath = Path.Combine(Path.GetTempPath(), InstallLogFileName);
+                    string logWarning = null;
+                    try
+                    {
+                        File.WriteAllText(logPath, output, new UTF8Encoding(true));
+                    }
+                    catch (Exception error)
+                    {
+                        logWarning = error.Message;
+                    }
                     if (installer.ExitCode != 0)
                     {
-                        throw new InvalidOperationException(
-                            "Windows 安装脚本返回错误码 " + installer.ExitCode + "。"
-                        );
+                        string message = "Windows 安装脚本返回错误码 " + installer.ExitCode + "。";
+                        string failureLines = ExtractFailureLines(output);
+                        if (failureLines.Length > 0)
+                        {
+                            message += "\n\n" + failureLines;
+                        }
+                        message += logWarning == null
+                            ? "\n\n完整日志：" + logPath
+                            : "\n\n日志写入失败：" + logWarning;
+                        throw new InvalidOperationException(message);
                     }
                 }
 
@@ -169,6 +196,25 @@ namespace VectorToolbox.Installer
                 );
                 return 1;
             }
+        }
+
+        // 优先取脚本标记的失败行；没有标记时退回输出末尾几行。
+        private static string ExtractFailureLines(string output)
+        {
+            string[] lines = output
+                .Split(new[] { "\r\n", "\n" }, StringSplitOptions.None)
+                .Select(line => line.Trim())
+                .Where(line => line.Length > 0)
+                .ToArray();
+            string[] marked = lines.Where(line => line.Contains(FailureMarker)).ToArray();
+            if (marked.Length > 0)
+            {
+                return string.Join("\n", marked);
+            }
+            return string.Join(
+                "\n",
+                lines.Skip(Math.Max(0, lines.Length - FallbackTailLineCount))
+            );
         }
 
         private static string TryDeleteDirectory(string path)
