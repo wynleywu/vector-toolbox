@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.2] - 2026-10-08
+
+### Added
+- Export PDF: "自定义导出 PDF..." opens Illustrator's native Save Adobe PDF dialog on a throwaway copy.
+
+### Changed
+- Merged and outlined PDF exports apply the selected preset via `PDFSaveOptions` on a disk copy.
+
+### Fixed
+- Windows installer writes `install-windows.bat` output to `%TEMP%\VectorToolboxSetup.log` and shows the failing lines in the error dialog.
+
+---
+
 ## [1.3.1] - 2026-08-19
 
 ### Fixed
