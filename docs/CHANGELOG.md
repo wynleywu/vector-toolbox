@@ -11,6 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.0] - 2026-10-08
+
+### Added
+- Windows installer finds Illustrator via the registry `InstallLocation`, in addition to the default Adobe folders.
+- Install into localized script folders for cs_CZ, de_DE, es_ES/es_MX, it_IT, ru_RU and tr_TR.
+
+### Fixed
+- Removed the UTF-8 BOM from `install-windows.bat` so `@echo off` takes effect and the failure dialog no longer shows echoed script lines.
+
+---
+
 ## [1.3.2] - 2026-10-08
 
 ### Added
