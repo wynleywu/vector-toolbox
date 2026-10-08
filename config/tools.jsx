@@ -66,8 +66,8 @@ var TOOLBOX_CONFIG = $.global.TOOLBOX_CONFIG = [
         script: "scripts/export/export-pdf.jsx",
         mode: "dialog",
         keywords: ["导出", "PDF", "发印", "画板", "pdf", "export", "print"],
-        description: "按 Illustrator PDF 预设导出，支持抽样估算大小、多页合并与转曲版",
+        description: "按选定的 Illustrator PDF 预设导出，可打开原生存储 Adobe PDF 参数页，支持大小估算、多页合并与转曲版",
         author: "Vector Toolbox Team",
-        version: "1.5.0"
+        version: "1.5.4"
     }
 ];

@@ -1,7 +1,9 @@
 ﻿/**
  * Vector Toolbox - Export PDF (导出 PDF)
- * Uses Export for Screens for artboard PDFs; merged/outlined variants run on a
- * disk copy of the document so the working document is never converted by saveAs
+ * Uses Export for Screens for split artboard PDFs. Merged/outlined variants use
+ * PDFSaveOptions on a disk copy so the selected PDF preset is applied consistently
+ * without converting the working document. Custom export opens Illustrator's
+ * native Save Adobe PDF dialog on a throwaway copy.
  */
 
 #target illustrator
@@ -310,12 +312,12 @@
         } catch (e) {}
     }
 
-    function exportScreens(workDoc, folder, indices, preset, wholeDocument) {
+    function exportScreens(workDoc, folder, indices, preset) {
         var options = new ExportForScreensPDFOptions();
         options.pdfPreset = preset;
         var item = new ExportForScreensItemToExport();
-        item.document = wholeDocument ? true : false;
-        item.artboards = wholeDocument ? "" : toRangeString(indices);
+        item.document = false;
+        item.artboards = toRangeString(indices);
         workDoc.exportForScreens(folder, ExportForScreensType.SE_PDF, options, item);
     }
 
@@ -384,6 +386,10 @@
     ddlQuality.selection = preferredPresetIndex(pdfPresets);
     ddlQuality.alignment = ["fill", "center"];
     ddlQuality.helpTip = "来自 Illustrator 的 PDF 预设，所有导出路径使用同一预设";
+    var btnCustomExport = rowQuality.add("button", undefined, "自定义导出 PDF...");
+    btnCustomExport.helpTip = "打开 Illustrator 原生的存储 Adobe PDF 参数页，可设置全部 PDF 参数";
+    btnCustomExport.preferredSize.width = 130;
+    var nativeExportRequested = false;
 
     var chkLive = pnlOut.add("checkbox", undefined, "可编辑版（保持文字可改）");
     chkLive.value = true;
@@ -498,7 +504,7 @@
                 outlineVisibleText(workDoc);
             }
             return withEstimateFolder(function (temp) {
-                exportScreens(workDoc, temp, indices, preset, false);
+                exportScreens(workDoc, temp, indices, preset);
                 return estimateRange(listPdfs(temp), totalCount);
             });
         } finally {
@@ -551,7 +557,7 @@
             return;
         }
         var text = "预览: " + names.join("  和  ");
-        var cloneNeeded = chkOutline.value || (rbMerge.value && currentIndices().length < artboards.length);
+        var cloneNeeded = chkOutline.value || rbMerge.value;
         if (cloneNeeded) {
             var unsaved = false;
             try { unsaved = !doc.saved; } catch (savedErr) {}
@@ -579,6 +585,169 @@
     edtName.onChanging = updatePreview;
     edtRange.onChanging = onExportOptionChange;
     updatePreview();
+
+    var NATIVE_PDF_ACTION_SET = "VT PDF Dialog";
+    var NATIVE_PDF_ACTION_NAME = "Custom PDF Export";
+
+    function actionHexByte(value) {
+        var hex = value.toString(16);
+        return hex.length < 2 ? "0" + hex : hex;
+    }
+
+    function actionUnicodeHex(value) {
+        var text = "" + value;
+        var hex = "";
+        var i;
+        var code;
+        for (i = 0; i < text.length; i++) {
+            code = text.charCodeAt(i);
+            if (code < 0x80) {
+                hex += actionHexByte(code);
+            } else if (code < 0x800) {
+                hex += actionHexByte(0xC0 | (code >> 6));
+                hex += actionHexByte(0x80 | (code & 0x3F));
+            } else {
+                hex += actionHexByte(0xE0 | (code >> 12));
+                hex += actionHexByte(0x80 | ((code >> 6) & 0x3F));
+                hex += actionHexByte(0x80 | (code & 0x3F));
+            }
+        }
+        return hex;
+    }
+
+    function actionParameter(number, key, type, value) {
+        var text =
+            "/parameter-" + number + " {\r\n" +
+            "/key " + key + "\r\n" +
+            "/showInPalette 4294967295\r\n" +
+            "/type (" + type + ")\r\n";
+        if (type === "ustring") {
+            var hex = actionUnicodeHex(value);
+            text += "/value [ " + (hex.length / 2) + "\r\n" + hex + "\r\n]\r\n";
+        } else {
+            text += "/value " + value + "\r\n";
+        }
+        return text + "}\r\n\r\n";
+    }
+
+    function buildNativePdfAction(pdfFile) {
+        var setHex = actionUnicodeHex(NATIVE_PDF_ACTION_SET);
+        var actionHex = actionUnicodeHex(NATIVE_PDF_ACTION_NAME);
+        var action =
+            "/version 3\r\n\r\n" +
+            "/name [ " + (setHex.length / 2) + "\r\n" + setHex + "\r\n]\r\n\r\n" +
+            "/isOpen 1\r\n\r\n" +
+            "/actionCount 1\r\n\r\n" +
+            "/action-1 {\r\n\r\n" +
+            "/name [ " + (actionHex.length / 2) + "\r\n" + actionHex + "\r\n]\r\n\r\n" +
+            "/keyIndex 0\r\n\r\n" +
+            "/colorIndex 0\r\n\r\n" +
+            "/isOpen 1\r\n\r\n" +
+            "/eventCount 1\r\n\r\n" +
+            "/event-1 {\r\n\r\n" +
+            "/useRulersIn1stQuadrant 0\r\n\r\n" +
+            "/internalName (adobe_saveDocumentAs)\r\n\r\n" +
+            "/localizedName [ " + (actionHex.length / 2) + "\r\n" + actionHex + "\r\n]\r\n\r\n" +
+            "/isOpen 1\r\n\r\n" +
+            "/isOn 1\r\n\r\n" +
+            "/hasDialog 1\r\n\r\n" +
+            "/showDialog 1\r\n\r\n" +
+            "/parameterCount 18\r\n\r\n" +
+            actionParameter(1, 2003201396, "integer", 5) +
+            actionParameter(2, 1668445298, "integer", 17) +
+            actionParameter(3, 1702392878, "integer", 1) +
+            actionParameter(4, 1768975459, "boolean", 0) +
+            actionParameter(5, 1769236589, "boolean", 1) +
+            actionParameter(6, 1667723380, "boolean", 0) +
+            actionParameter(7, 1768320372, "integer", 0) +
+            actionParameter(8, 1768122987, "boolean", 1) +
+            actionParameter(9, 1886612598, "integer", 2) +
+            actionParameter(10, 1668118891, "boolean", 1) +
+            actionParameter(11, 1684435811, "boolean", 1) +
+            actionParameter(12, 1701802100, "integer", 1) +
+            actionParameter(13, 1851878757, "ustring", pdfFile.fsName.replace(/\\/g, "/")) +
+            actionParameter(14, 1718775156, "ustring", "Adobe PDF") +
+            actionParameter(15, 1702392942, "ustring", "pdf") +
+            actionParameter(16, 1936548194, "boolean", 0) +
+            actionParameter(17, 1935764588, "boolean", 1) +
+            actionParameter(18, 1936875886, "ustring", "") +
+            "}\r\n\r\n" +
+            "}\r\n";
+        return action;
+    }
+
+    function writeNativePdfAction(actionFile, pdfFile) {
+        actionFile.encoding = "BINARY";
+        if (!actionFile.open("w")) {
+            throw new Error("无法创建临时 PDF 参数动作");
+        }
+        try {
+            actionFile.write(buildNativePdfAction(pdfFile));
+        } finally {
+            actionFile.close();
+        }
+    }
+
+    function openNativePdfExport() {
+        var clone = null;
+        var actionFile = null;
+        var tempPdf = null;
+        var destination = null;
+        var saved = false;
+        try {
+            if (!chkLive.value && !chkOutline.value) {
+                alert("请至少勾选「可编辑版」或「转曲版」。", "自定义导出 PDF");
+                return;
+            }
+            if (!doc.saved) {
+                alert("自定义导出需要先保存当前 Illustrator 文档。", "自定义导出 PDF");
+                return;
+            }
+
+            var destinationFolder = new Folder(edtDest.text);
+            if (!destinationFolder.exists && !destinationFolder.create()) {
+                throw new Error("无法创建保存目录: " + destinationFolder.fsName);
+            }
+            destination = new File(destinationFolder.fsName + "/" + currentStem() + ".pdf");
+            var suffix = (new Date()).getTime() + "_" + Math.floor(Math.random() * 1000000);
+            tempPdf = new File(Folder.temp.fsName + "/__vt_custom_pdf_" + suffix + ".pdf");
+            actionFile = new File(Folder.temp.fsName + "/__vt_custom_pdf_" + suffix + ".aia");
+            clone = makeClone();
+            if (chkOutline.value) outlineVisibleText(clone.doc);
+            writeNativePdfAction(actionFile, tempPdf);
+            try { app.unloadAction(NATIVE_PDF_ACTION_NAME, NATIVE_PDF_ACTION_SET); } catch (unloadErr) {}
+            app.loadAction(actionFile);
+            app.doScript(NATIVE_PDF_ACTION_NAME, NATIVE_PDF_ACTION_SET);
+            saved = tempPdf.exists;
+        } catch (exportErr) {
+            alert(
+                "无法打开 Illustrator 的存储 Adobe PDF 参数页:\n" +
+                (exportErr.message || exportErr.toString()),
+                "自定义导出 PDF"
+            );
+        } finally {
+            try { app.unloadAction(NATIVE_PDF_ACTION_NAME, NATIVE_PDF_ACTION_SET); } catch (unloadErr2) {}
+            closeClone(clone);
+            if (actionFile && actionFile.exists) {
+                try { actionFile.remove(); } catch (actionRemoveErr) {}
+            }
+        }
+
+        if (!saved || !tempPdf || !tempPdf.exists) return;
+        if (moveFile(tempPdf, destination)) {
+            if (chkOpenFolder.value) {
+                try { destination.parent.execute(); } catch (openErr) {}
+            }
+            alert("✓ 已使用自定义 PDF 参数导出:\n" + destination.fsName, "自定义导出 PDF");
+        } else {
+            alert("PDF 参数已保存，但无法移动到目标目录:\n" + destination.fsName, "自定义导出 PDF");
+        }
+    }
+
+    btnCustomExport.onClick = function () {
+        nativeExportRequested = true;
+        dlg.close(2);
+    };
 
     btnEstimate.onClick = function () {
         if (!chkLive.value && !chkOutline.value) {
@@ -642,6 +811,7 @@
     grpBtns.add("button", undefined, "取消", { name: "cancel" });
 
     if (dlg.show() !== 1) {
+        if (nativeExportRequested) openNativePdfExport();
         return;
     }
 
@@ -711,7 +881,7 @@
 
     function exportSplit(workDoc, nameStem) {
         withTempFolder(function (temp) {
-            exportScreens(workDoc, temp, targetIndices, preset, false);
+            exportScreens(workDoc, temp, targetIndices, preset);
             var pdfs = listPdfs(temp);
             var used = [];
             var i;
@@ -729,23 +899,8 @@
         });
     }
 
-    // Whole-document Export for Screens already yields one multi-page PDF, which
-    // avoids needing a clone for the common "all artboards" case.
-    function exportMergedWholeDoc(workDoc, nameStem) {
-        withTempFolder(function (temp) {
-            exportScreens(workDoc, temp, targetIndices, preset, true);
-            var pdfs = listPdfs(temp);
-            if (pdfs.length === 0) {
-                throw new Error("导出屏幕未生成 PDF 文件");
-            }
-            var dest = new File(destDir.fsName + "/" + nameStem + ".pdf");
-            if (moveFile(pdfs[0], dest)) exportedFiles.push(dest);
-        });
-    }
-
     function needsClone(outlined) {
-        if (outlined) return true;
-        return mergeOne && targetIndices.length < artboards.length;
+        return outlined || mergeOne;
     }
 
     function exportOneSet(outlined, nameStem) {
@@ -761,12 +916,13 @@
             }
             if (!mergeOne) {
                 exportSplit(workDoc, nameStem);
-            } else if (clone) {
+            } else {
+                if (!clone) {
+                    throw new Error("合并导出未创建文档副本");
+                }
                 var dest = new File(destDir.fsName + "/" + nameStem + ".pdf");
                 exportMergedBySaveAs(workDoc, dest, targetIndices, preset);
                 if (dest.exists) exportedFiles.push(dest);
-            } else {
-                exportMergedWholeDoc(workDoc, nameStem);
             }
         } finally {
             closeClone(clone);
