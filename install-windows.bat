@@ -1,4 +1,4 @@
-﻿@echo off
+@echo off
 setlocal EnableExtensions DisableDelayedExpansion
 chcp 65001 >nul
 
@@ -55,10 +55,7 @@ echo.
 if defined VT_ILLUSTRATOR_ROOT (
     call :ScanIllustrator "%VT_ILLUSTRATOR_ROOT%"
 ) else (
-    for /d %%A in ("C:\Program Files\Adobe\Adobe Illustrator*") do call :ScanIllustrator "%%A"
-    for /d %%A in ("C:\Program Files (x86)\Adobe\Adobe Illustrator*") do call :ScanIllustrator "%%A"
-    for /d %%A in ("D:\Program Files\Adobe\Adobe Illustrator*") do call :ScanIllustrator "%%A"
-    for /d %%A in ("D:\Adobe\Adobe Illustrator*") do call :ScanIllustrator "%%A"
+    call :ScanInstalledIllustrators
 )
 
 echo.
@@ -96,7 +93,19 @@ for /d %%L in ("%PRESETS_ROOT%\*") do (
     call :InstallIfExists "%%L\스크립트" "%APP_DIR%"
     call :InstallIfExists "%%L\Skrypty" "%APP_DIR%"
     call :InstallIfExists "%%L\Skript" "%APP_DIR%"
+    call :InstallIfExists "%%L\Skripty" "%APP_DIR%"
+    call :InstallIfExists "%%L\Skripten" "%APP_DIR%"
+    call :InstallIfExists "%%L\Script" "%APP_DIR%"
+    call :InstallIfExists "%%L\Secuencias de comandos" "%APP_DIR%"
+    call :InstallIfExists "%%L\Сценарии" "%APP_DIR%"
+    call :InstallIfExists "%%L\Komut Dosyaları" "%APP_DIR%"
 )
+exit /b 0
+
+:ScanInstalledIllustrators
+rem 注册表登记的安装位置优先，再补常见默认目录；去重后逐个扫描。
+set "VT_PS_FIND_ROOTS=[Console]::OutputEncoding = New-Object Text.UTF8Encoding($false); $roots = @(); foreach ($key in @('HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*', 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*')) { Get-ItemProperty -Path $key -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -like '*Illustrator*' -and $_.InstallLocation } | ForEach-Object { $roots += $_.InstallLocation.Trim().TrimEnd('\') } }; foreach ($base in @('C:\Program Files\Adobe', 'C:\Program Files (x86)\Adobe', 'D:\Program Files\Adobe', 'D:\Adobe')) { Get-ChildItem -LiteralPath $base -Directory -Filter 'Adobe Illustrator*' -ErrorAction SilentlyContinue | ForEach-Object { $roots += $_.FullName } }; $roots | Where-Object { Test-Path -LiteralPath $_ -PathType Container } | Sort-Object -Unique"
+for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "& ([scriptblock]::Create($env:VT_PS_FIND_ROOTS))"`) do call :ScanIllustrator "%%A"
 exit /b 0
 
 :ScanIllustrator
